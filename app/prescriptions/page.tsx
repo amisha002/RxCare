@@ -8,17 +8,20 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Bell, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function PrescriptionsPage() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
-        <Sidebar />
-      </div>
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div
+    className={`flex-1 transition-all duration-300 overflow-auto ${
+      !sidebarCollapsed ? 'shadow-2xl shadow-black/40 ring-1 ring-black/10' : ''
+    }`}> 
         <div className="p-6">
           {/* Header */}
           <div className="mb-8">
