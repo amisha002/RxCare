@@ -1,7 +1,7 @@
-# 💊 RxCare – Prescription Reminder PWA 💊
+# 💊 RxMind – Prescription Reminder PWA 💊
 **Helping you manage medications and prescriptions effortlessly!**  
 
-RxCare is a modern Progressive Web App (PWA) designed to help users manage their medications and prescriptions effortlessly. With RxCare, users can upload prescriptions, track medicine schedules, and receive timely reminders to ensure they never miss a dose.  
+RxMind is a modern Progressive Web App (PWA) designed to help users manage their medications and prescriptions effortlessly. With RxMind, users can upload prescriptions, track medicine schedules, and receive timely reminders to ensure they never miss a dose.  
 
 ---
 
@@ -18,7 +18,7 @@ RxCare is a modern Progressive Web App (PWA) designed to help users manage their
 
 | Frontend           | Backend       | Database       |
 |------------------|---------------|----------------|
-| ⚛️ React, Next.js, Tailwind CSS | Node.js, Express.js | 🗄️ MongoDB Atlas |
+| ⚛️ React, Next.js, Tailwind CSS | Node.js, Express.js | 🗄️ PostgreSQL |
 
 **Additional Tools & Libraries:**  
 - 🗃️ LocalStorage for user session management  
