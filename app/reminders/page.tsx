@@ -52,6 +52,7 @@ const reminders = [
 
 export default function RemindersPage() {
   const [selectedFilter, setSelectedFilter] = useState("all")
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const filteredReminders = reminders.filter((reminder) => {
     if (selectedFilter === "all") return true
@@ -91,12 +92,13 @@ export default function RemindersPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
-        <Sidebar />
-      </div>
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div
+    className={`flex-1 transition-all duration-300 overflow-auto ${
+      !sidebarCollapsed ? 'shadow-2xl shadow-black/40 ring-1 ring-black/10' : ''
+    }`}> 
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             {/* Header */}
