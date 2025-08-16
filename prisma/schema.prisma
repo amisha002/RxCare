@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// Users Table
+// =====================
+model User {
+  id                 Int             @id @default(autoincrement())
+  email              String          @unique
+  phone_number       String          @unique
+  caregiver_phone    String?
+  family_members     Json?           // store array of names/relations
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+
+  // relations
+  prescriptions      Prescription[]
+  notifications      Notification[]
+}
+
+// =====================
+// Prescriptions Table
+// =====================
+model Prescription {
+  id                 Int             @id @default(autoincrement())
+  userId             Int
+  family_member_name String
+  prescription_image String?         // URL to S3/Cloud
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+
+  // relations
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medicines   Medicine[]
+}
+
+// =====================
+// Medicines Table
+// =====================
+model Medicine {
+  id             Int       @id @default(autoincrement())
+  prescriptionId Int
+  medicine_name  String
+  dosage_count   Int
+  timing         Json
+  duration_days  Int
+  start_date     DateTime
+  end_date       DateTime     
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  notifications  Notification[]
+}
+
+
+// =====================
+// Notifications Table
+// =====================
+model Notification {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  medicineId    Int
+  scheduled_time DateTime 
+  sent          Boolean   @default(false)
+  created_at    DateTime  @default(now())
+
+  // relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+}
