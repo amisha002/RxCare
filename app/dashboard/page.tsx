@@ -13,7 +13,7 @@ import { Bell } from "lucide-react"
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState("")
   const [currentDate, setCurrentDate] = useState("")
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date()
@@ -36,12 +36,15 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
-        <Sidebar />
-      </div>
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+       <div
+    className={`flex-1 transition-all duration-300 overflow-auto ${
+      !sidebarCollapsed ? 'shadow-2xl shadow-black/40 ring-1 ring-black/10' : ''
+    }`}> 
+
+      {/* Main Content */}
         <div className="p-6">
           {/* Header */}
           <div className="mb-8">
