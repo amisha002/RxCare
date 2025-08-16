@@ -14,30 +14,30 @@ const poppins = Poppins({
 
 // ✅ Next.js App Router: keep only valid fields in metadata
 export const metadata: Metadata = {
-  title: "RxCare - Never Miss a Dose Again",
+  title: "RxMind - Never Miss a Dose Again",
   description:
-    "Seamlessly manage your medications, set personalized reminders, and track your health with RxCare - your trusted partner in well-being.",
+    "Seamlessly manage your medications, set personalized reminders, and track your health with RxMind - your trusted partner in well-being.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "RxCare",
+    title: "RxMind",
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
     type: "website",
-    siteName: "RxCare",
-    title: "RxCare - Never Miss a Dose Again",
+    siteName: "RxMind",
+    title: "RxMind - Never Miss a Dose Again",
     description:
-      "Seamlessly manage your medications, set personalized reminders, and track your health with RxCare - your trusted partner in well-being.",
+      "Seamlessly manage your medications, set personalized reminders, and track your health with RxMind - your trusted partner in well-being.",
   },
   twitter: {
     card: "summary",
-    title: "RxCare - Never Miss a Dose Again",
+    title: "RxMind - Never Miss a Dose Again",
     description:
-      "Seamlessly manage your medications, set personalized reminders, and track your health with RxCare - your trusted partner in well-being.",
+      "Seamlessly manage your medications, set personalized reminders, and track your health with RxMind - your trusted partner in well-being.",
   },
 }
 
