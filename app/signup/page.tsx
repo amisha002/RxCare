@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [password, setPassword] = useState("")
+  const [age, setAge] = useState(0)
   const [confirmPassword, setConfirmPassword] = useState("")
   const [caregiverPhone, setCaregiverPhone] = useState("")
   const [needsCaregiver, setNeedsCaregiver] = useState(false)
@@ -44,7 +45,7 @@ export default function RegisterPage() {
     input.value = value
   }
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!passwordsMatch) {
@@ -57,14 +58,62 @@ export default function RegisterPage() {
       return
     }
 
-    console.log("Registration attempt:", {
+    // Build request body
+    const requestBody = {
       email,
-      phoneNumber,
       password,
-      caregiverPhone: needsCaregiver ? caregiverPhone : null,
-      familyMembers,
-    })
+      age,
+      phone_number: phoneNumber,
+      caregiver_phone: needsCaregiver ? caregiverPhone : null,
+      family_members: familyMembers,
+    }
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        alert(data.error || "Registration failed")
+        return
+      }
+
+      alert("Registration successful!")
+      console.log("Registered user:", data)
+    } catch (err) {
+      console.error("Error:", err)
+      alert("Something went wrong. Please try again later.")
+    }
   }
+  // const handleRegister = (e: React.FormEvent) => {
+  //   e.preventDefault()
+
+
+
+  //   if (!passwordsMatch) {
+  //     alert("Passwords do not match. Please check your password confirmation.")
+  //     return
+  //   }
+
+  //   if (password.length < 8) {
+  //     alert("Password must be at least 8 characters long.")
+  //     return
+  //   }
+
+  //   console.log("Registration attempt:", {
+  //     email,
+  //     phoneNumber,
+  //     password,
+  //     caregiverPhone: needsCaregiver ? caregiverPhone : null,
+  //     familyMembers,
+  //   })
+  // }
 
   return (
     <>
@@ -121,6 +170,24 @@ export default function RegisterPage() {
                     className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
+
+                </div>
+
+
+                <div className="space-y-2">
+                  <Label htmlFor="age" className="text-gray-700">
+                    Age *
+                  </Label>
+                  <Input
+                    id="age"
+                    type=""
+                    placeholder="How old are you?"
+                    value={age}
+                    onChange={(e) => setAge(Number(e.target.value))}
+                    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                    minLength={8}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -138,7 +205,6 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-gray-700">
                     Password *
@@ -154,7 +220,6 @@ export default function RegisterPage() {
                     minLength={8}
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-gray-700">
                     Confirm Password *
@@ -165,9 +230,8 @@ export default function RegisterPage() {
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`border-blue-200 focus:border-blue-500 focus:ring-blue-500 ${
-                      showPasswordError ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""
-                    }`}
+                    className={`border-blue-200 focus:border-blue-500 focus:ring-blue-500 ${showPasswordError ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""
+                      }`}
                     required
                   />
                   {showPasswordError && (
@@ -332,7 +396,7 @@ export default function RegisterPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   )
 }
