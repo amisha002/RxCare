@@ -1,8 +1,8 @@
 {
-  "name": "RxCare - Prescription Management",
-  "short_name": "RxCare",
-  "description": "Never miss a dose again. Manage your medications with RxCare.",
-  "start_url": "/",
+  "name": "RxMind - Prescription Management",
+  "short_name": "RxMind",
+  "description": "Never miss a dose again. Manage your medications with RxMind.",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
