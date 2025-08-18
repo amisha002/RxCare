@@ -15,12 +15,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+
 // =====================
 // Users Table
 // =====================
 model User {
   id                 Int             @id @default(autoincrement())
   email              String          @unique
+  password           String
+  age                Int 
   phone_number       String          @unique
   caregiver_phone    String?
   family_members     Json?           // store array of names/relations
