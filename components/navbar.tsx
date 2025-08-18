@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, User, UserPlus, Home, Pill, Calendar, Settings } from "lucide-react"
+import LogoutButton from "./logoutButton/page"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -64,6 +65,7 @@ export function Navbar() {
                 <span>Login</span>
               </Link>
             </Button>
+            <LogoutButton/>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
               <Link href="/signup" className="flex items-center space-x-1">
                 <UserPlus className="h-4 w-4" />
@@ -141,6 +143,7 @@ export function Navbar() {
                     <span>Login</span>
                   </Link>
                 </Button>
+                <LogoutButton/>
                 <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" asChild>
                   <Link
                     href="/signup"

@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
   const handlePhoneInput = (e: React.FormEvent<HTMLInputElement>) => {
     const input = e.currentTarget
-    const value = input.value.replace(/[^0-9]/g, "") // Remove all non-numeric characters
+    const value = input.value.replace(/[^0-9]/g, "") 
     input.value = value
   }
 
@@ -69,7 +69,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch("/api/users/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,34 +86,12 @@ export default function RegisterPage() {
 
       alert("Registration successful!")
       console.log("Registered user:", data)
+      window.location.href = '/login'
     } catch (err) {
       console.error("Error:", err)
       alert("Something went wrong. Please try again later.")
     }
   }
-  // const handleRegister = (e: React.FormEvent) => {
-  //   e.preventDefault()
-
-
-
-  //   if (!passwordsMatch) {
-  //     alert("Passwords do not match. Please check your password confirmation.")
-  //     return
-  //   }
-
-  //   if (password.length < 8) {
-  //     alert("Password must be at least 8 characters long.")
-  //     return
-  //   }
-
-  //   console.log("Registration attempt:", {
-  //     email,
-  //     phoneNumber,
-  //     password,
-  //     caregiverPhone: needsCaregiver ? caregiverPhone : null,
-  //     familyMembers,
-  //   })
-  // }
 
   return (
     <>
@@ -186,7 +164,6 @@ export default function RegisterPage() {
                     onChange={(e) => setAge(Number(e.target.value))}
                     className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
                     required
-                    minLength={8}
                   />
                 </div>
 

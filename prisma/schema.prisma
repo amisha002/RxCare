@@ -29,10 +29,29 @@ model User {
   family_members     Json?           // store array of names/relations
   created_at         DateTime        @default(now())
   updated_at         DateTime        @updatedAt
-
+  tokens             Token[]
   // relations
   prescriptions      Prescription[]
   notifications      Notification[]
+}
+
+model Token {
+  id         String     @id @default(cuid())
+  userId     Int 
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jti        String     @unique
+  tokenHash  String     // sha256(refreshToken)
+  type       TokenType
+  userAgent  String?
+  ip         String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+enum TokenType {
+  REFRESH
 }
 
 // =====================
