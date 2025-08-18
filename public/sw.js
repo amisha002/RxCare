@@ -1,12 +1,15 @@
-const CACHE_NAME = "rxcare-v1"
+const CACHE_NAME = "rxmind-v1"
 const urlsToCache = [
   "/",
   "/dashboard",
   "/prescriptions",
+  "/reminders",
+  "/signup",
   "/pharmacy-locator",
   "/notifications",
   "/settings",
   "/help",
+  "/globals.css",
   "/login",
   "/offline",
   "/manifest.json",
@@ -19,7 +22,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache)
-    }),
+    })
   )
 })
 
@@ -38,7 +41,7 @@ self.addEventListener("fetch", (event) => {
           return caches.match("/offline")
         }
       })
-    }),
+    })
   )
 })
 
@@ -51,9 +54,9 @@ self.addEventListener("activate", (event) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName)
           }
-        }),
+        })
       )
-    }),
+    })
   )
 })
 
@@ -72,7 +75,7 @@ function doBackgroundSync() {
 // Push notifications
 self.addEventListener("push", (event) => {
   const options = {
-    body: event.data ? event.data.text() : "New notification from RxCare",
+    body: event.data ? event.data.text() : "New notification from RxMind",
     icon: "/icon-192x192.png",
     badge: "/icon-192x192.png",
     vibrate: [100, 50, 100],
@@ -94,7 +97,7 @@ self.addEventListener("push", (event) => {
     ],
   }
 
-  event.waitUntil(self.registration.showNotification("RxCare", options))
+  event.waitUntil(self.registration.showNotification("RxMind", options))
 })
 
 // Notification click handling
