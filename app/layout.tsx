@@ -4,6 +4,7 @@ import { Inter, Poppins } from "next/font/google"
 import { PWAWrapper } from "@/components/pwa/pwa-wrapper"
 import { Navbar } from "@/components/navbar"
 import "./globals.css"
+import ConnectionBanner from "@/components/connectionBanner"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const poppins = Poppins({
@@ -16,7 +17,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "RxMind - Never Miss a Dose Again",
   description:
-    "Seamlessly manage your medications, set personalized reminders, and track your health with RxMind - your trusted partner in well-being.",
+    "Seamlessly manage your medications, set personalized reminders, and track your health with RxCare - your trusted partner in well-being.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -79,10 +80,12 @@ html {
         `}</style>
       </head>
       <body className="font-sans">
+        
         <PWAWrapper>
           <Navbar />
           {children}
         </PWAWrapper>
+        <ConnectionBanner />
       </body>
     </html>
   )

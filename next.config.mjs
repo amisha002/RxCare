@@ -1,8 +1,9 @@
-/** @type {import('next').NextConfig} */
-import withPWA from "next-pwa";
-import runtimeCaching from "next-pwa/cache.js"; // ✅ built-in sensible defaults
+import withPWA from 'next-pwa';
 
-const nextConfig = {
+/** @type {import('next').NextConfig} */
+const baseConfig = {
+  output: "export",
+  trailingSlash: true,
   experimental: {
     webpackBuildWorker: true,
   },
@@ -15,27 +16,21 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  async headers() {
-    return [
-      {
-        source: "/manifest.json",
-        headers: [
-          {
-            key: "Content-Type",
-            value: "application/manifest+json",
-          },
-        ],
-      },
-    ];
+  async rewrites() {
+    return [];
   },
 };
 
-// ✅ Wrap with PWA and add runtimeCaching
-export default withPWA({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development", // disabled in dev
-  register: true,
-  skipWaiting: true,
-  runtimeCaching, // ✅ ensures offline caching of pages/assets/APIs
+const withPWAWrapped = withPWA({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: undefined,
   buildExcludes: [/middleware-manifest\.json$/],
-})(nextConfig);
+  publicExcludes: [],
+  cacheOnFrontEndNav: true,
+  fallbacks: {},
+});
+
+export default withPWAWrapped({
+  ...baseConfig,
+});
