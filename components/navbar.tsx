@@ -1,13 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Button } from "@/components/ui/button"
 import { Menu, X, User, UserPlus, Home, Pill, Calendar, Settings } from "lucide-react"
 import LogoutButton from "./logoutButton/page"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const { user } = useCurrentUser()
+  const isAuthed = !!user
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
@@ -34,21 +37,21 @@ export function Navbar() {
                 <span>Home</span>
               </Link>
               <Link
-                href="/medications"
+                href={isAuthed ? "/prescriptions" : "/login"}
                 className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 <Pill className="h-4 w-4" />
                 <span>Medications</span>
               </Link>
               <Link
-                href="/reminders"
+                href={isAuthed ? "/reminders" : "/login"}
                 className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 <Calendar className="h-4 w-4" />
                 <span>Reminders</span>
               </Link>
               <Link
-                href="/profile"
+                href={isAuthed ? "/settings" : "/login"}
                 className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 <Settings className="h-4 w-4" />
@@ -59,19 +62,24 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons & Theme Toggle */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-white hover:text-blue-400 hover:bg-gray-800" asChild>
-              <Link href="/login" className="flex items-center space-x-1">
-                <User className="h-4 w-4" />
-                <span>Login</span>
-              </Link>
-            </Button>
-            <LogoutButton/>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-              <Link href="/signup" className="flex items-center space-x-1">
-                <UserPlus className="h-4 w-4" />
-                <span>Sign Up</span>
-              </Link>
-            </Button>
+            {isAuthed ? (
+              <LogoutButton/>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="text-white hover:text-blue-400 hover:bg-gray-800" asChild>
+                  <Link href="/login" className="flex items-center space-x-1">
+                    <User className="h-4 w-4" />
+                    <span>Login</span>
+                  </Link>
+                </Button>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                  <Link href="/signup" className="flex items-center space-x-1">
+                    <UserPlus className="h-4 w-4" />
+                    <span>Sign Up</span>
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button & Theme Toggle */}
@@ -101,7 +109,7 @@ export function Navbar() {
               <span>Home</span>
             </Link>
             <Link
-              href="/medications"
+              href={isAuthed ? "/prescriptions" : "/login"}
               className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -109,7 +117,7 @@ export function Navbar() {
               <span>Medications</span>
             </Link>
             <Link
-              href="/reminders"
+              href={isAuthed ? "/reminders" : "/login"}
               className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -117,7 +125,7 @@ export function Navbar() {
               <span>Reminders</span>
             </Link>
             <Link
-              href="/profile"
+              href={isAuthed ? "/settings" : "/login"}
               className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -128,32 +136,37 @@ export function Navbar() {
             {/* Mobile Auth Buttons */}
             <div className="pt-4 pb-3 border-t border-gray-600">
               <div className="flex items-center px-3 space-x-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1 text-white hover:text-blue-400 hover:bg-gray-800"
-                  asChild
-                >
-                  <Link
-                    href="/login"
-                    className="flex items-center justify-center space-x-1"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <LogoutButton/>
-                <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" asChild>
-                  <Link
-                    href="/signup"
-                    className="flex items-center justify-center space-x-1"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Sign Up</span>
-                  </Link>
-                </Button>
+                {isAuthed ? (
+                  <LogoutButton/>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 text-white hover:text-blue-400 hover:bg-gray-800"
+                      asChild
+                    >
+                      <Link
+                        href="/login"
+                        className="flex items-center justify-center space-x-1"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Login</span>
+                      </Link>
+                    </Button>
+                    <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                      <Link
+                        href="/signup"
+                        className="flex items-center justify-center space-x-1"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        <span>Sign Up</span>
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

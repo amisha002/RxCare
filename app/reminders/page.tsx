@@ -51,8 +51,18 @@ const reminders = [
 ]
 
 export default function RemindersPage() {
+  // Provide a simple UI to add a local reminder for demo
+  // These are stored in localStorage so the background inline scheduler in layout can announce
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Auto collapse on small screens
+  useEffect(() => {
+    const handle = () => setSidebarCollapsed(window.innerWidth < 1024)
+    handle()
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
 
   const filteredReminders = reminders.filter((reminder) => {
     if (selectedFilter === "all") return true

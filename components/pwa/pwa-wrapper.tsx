@@ -39,6 +39,7 @@ export function PWAWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      {/* Install prompt respects suppression period via localStorage, see component */}
       <InstallPrompt />
     </>
   )

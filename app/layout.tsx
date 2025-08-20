@@ -4,6 +4,8 @@ import { Inter, Poppins } from "next/font/google"
 import { PWAWrapper } from "@/components/pwa/pwa-wrapper"
 import { Navbar } from "@/components/navbar"
 import "./globals.css"
+import { useEffect } from "react"
+import { RemindersManager } from "@/lib/reminders"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const poppins = Poppins({
@@ -83,6 +85,30 @@ html {
           <Navbar />
           {children}
         </PWAWrapper>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            (function(){
+              if (!('Notification' in window)) return;
+              // Example: hydrate reminders from localStorage (could be replaced with API)
+              const stored = localStorage.getItem('rxmind_reminders');
+              let reminders = [];
+              try { reminders = stored ? JSON.parse(stored) : []; } catch {}
+              // minimal inline scheduler using the same logic
+              function speak(text){ try{ const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; speechSynthesis.speak(u);}catch{}}
+              function tick(){
+                const now = Date.now();
+                reminders.forEach(r=>{
+                  if (now >= r.time && now - r.time < 60000) {
+                    try { new Notification(r.title || 'Medicine Reminder', { body: r.message || 'Time to take your medicine.' }); } catch {}
+                    speak(r.message || 'Time to take your medicine');
+                  }
+                });
+              }
+              setInterval(tick, 30000);
+            })();
+          `}}
+        />
       </body>
     </html>
   )

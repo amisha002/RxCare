@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * Copyright 2018 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +15,33 @@
 // If the loader is already loaded, just stop.
 if (!self.define) {
   let registry = {};
+=======
+const CACHE_NAME = "rxmind-v1"
+// Cache only guaranteed-available assets to avoid install failing
+const urlsToCache = [
+  "/",
+  "/offline",
+  "/manifest.json",
+  "/icon-192x192.png",
+  "/icon-512x512.png",
+]
+
+// Install event - cache resources
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => Promise.all(urlsToCache.map((u) => cache.add(u).catch(() => null))))
+      .then(() => self.skipWaiting())
+  )
+})
+>>>>>>> dc5be7fae343000696ed53f8c2a00dc5f5d27b7d
 
   // Used for `eval` and `importScripts` where we can't get script URL by other means.
   // In both cases, it's safe to use a global var because those functions are synchronous.
   let nextDefineUri;
 
+<<<<<<< HEAD
   const singleRequire = (uri, parentUri) => {
     uri = new URL(uri + ".js", parentUri).href;
     return registry[uri] || (
@@ -45,6 +68,35 @@ if (!self.define) {
       })
     );
   };
+=======
+      return fetch(event.request).catch(() => {
+        // If both cache and network fail, show offline page
+        if (event.request.destination === "document") {
+          return caches.match("/offline")
+        }
+      })
+    })
+  )
+})
+
+// Activate event - clean up old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName)
+            }
+          })
+        )
+      )
+      .then(() => self.clients.claim())
+  )
+})
+>>>>>>> dc5be7fae343000696ed53f8c2a00dc5f5d27b7d
 
   self.define = (depsNames, factory) => {
     const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
