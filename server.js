@@ -9,8 +9,29 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
+// In-memory dedupe to avoid resending the same notification every minute
+const pushedNotificationIds = new Set();
+
+// CORS configuration - MUST be before routes
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.3001',
+    'http://localhost:3002',
+    'http://127.0.0.1:3002',
+    'http://localhost:3003',
+    'http://127.0.0.1:3003'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware
 app.use(express.json());
+
 // Web Push setup (VAPID)
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
@@ -20,36 +41,99 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 }
 
 // In-memory store for demo; ideally persist by user in DB
-const pushSubscriptions = new Set();
+// Key by endpoint to deduplicate repeated subscriptions
+const pushSubscriptions = new Map(); // endpoint -> subscription
 
 app.post('/api/push/subscribe', (req, res) => {
   try {
     const sub = req.body;
-    if (!sub || !sub.endpoint) return res.status(400).json({ error: 'Invalid subscription' });
-    pushSubscriptions.add(sub);
-    console.log(`🔔 Push subscribed. Total: ${pushSubscriptions.size}`);
-    return res.json({ success: true });
+    console.log('📥 Received subscription data:', JSON.stringify(sub, null, 2));
+    
+    if (!sub || !sub.endpoint) {
+      console.log('❌ Invalid subscription: missing endpoint');
+      return res.status(400).json({ error: 'Invalid subscription - missing endpoint' });
+    }
+    
+    if (!sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
+      console.log('❌ Invalid subscription: missing keys');
+      return res.status(400).json({ error: 'Invalid subscription - missing keys' });
+    }
+    
+    // Validate key lengths (accept base64url with or without padding)
+    const p256dhLen = sub.keys.p256dh.length; // 65 bytes -> 88 (padded) or 87 (unpadded)
+    if (p256dhLen !== 87 && p256dhLen !== 88) {
+      console.log('❌ Invalid p256dh key length:', p256dhLen);
+      return res.status(400).json({ error: 'Invalid p256dh key length' });
+    }
+
+    const authLen = sub.keys.auth.length; // 16 bytes -> 24 (padded) or 22 (unpadded)
+    if (authLen !== 22 && authLen !== 24) {
+      console.log('❌ Invalid auth key length:', authLen);
+      return res.status(400).json({ error: 'Invalid auth key length' });
+    }
+    
+    // Test the subscription with web-push to ensure it's valid
+    try {
+      webpush.sendNotification(sub, JSON.stringify({ test: true }));
+      console.log('✅ Subscription validated successfully');
+    } catch (validationError) {
+      console.log('❌ Subscription validation failed:', validationError.message);
+      return res.status(400).json({ error: 'Invalid subscription format' });
+    }
+    
+    // Deduplicate by endpoint
+    pushSubscriptions.set(sub.endpoint, sub);
+    console.log(`🔔 Push subscribed successfully. Total unique: ${pushSubscriptions.size}`);
+    return res.json({ success: true, message: 'Subscription stored' });
+    
   } catch (e) {
+    console.error('❌ Error in push subscription:', e);
     return res.status(500).json({ error: e.message });
   }
 });
 
 async function sendPushToAll(payload) {
   const tasks = [];
-  for (const sub of pushSubscriptions) {
+  for (const [endpoint, sub] of pushSubscriptions.entries()) {
     tasks.push(
       webpush.sendNotification(sub, JSON.stringify(payload)).catch(() => {
         // Remove invalid subscriptions
-        pushSubscriptions.delete(sub);
+        pushSubscriptions.delete(endpoint);
       })
     );
   }
   await Promise.allSettled(tasks);
 }
 
+// Clear all subscriptions (for debugging)
+app.post('/api/push/clear', (req, res) => {
+  try {
+    const oldCount = pushSubscriptions.size;
+    pushSubscriptions.clear();
+    console.log(`🗑️ Cleared ${oldCount} subscriptions`);
+    return res.json({ success: true, message: `Cleared ${oldCount} subscriptions` });
+  } catch (e) {
+    console.error('❌ Error clearing subscriptions:', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Get subscription count (for debugging)
+app.get('/api/push/count', (req, res) => {
+  try {
+    return res.json({ count: pushSubscriptions.size, subscriptions: Array.from(pushSubscriptions.values()) });
+  } catch (e) {
+    console.error('❌ Error getting subscription count:', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // Test push endpoint
 app.post('/api/push/test', async (req, res) => {
   try {
+    const currentCount = pushSubscriptions.size;
+    console.log(`🔔 Sending test push to ${currentCount} subscription(s)`);
+    
     await sendPushToAll({
       title: 'Test Notification',
       body: 'This is a test push from RxMind',
@@ -60,18 +144,6 @@ app.post('/api/push/test', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
-    'http://localhost:3002',
-    'http://127.0.0.1:3002',
-    'http://localhost:3003',
-    'http://127.0.0.1:3003'
-  ],
-}));
 
 // Start cron jobs
 function startCron() {
@@ -83,10 +155,13 @@ function startCron() {
         scheduled_time: { lte: now },
         sent: false,
       },
-      include: { medicine: true, user: true },
+      include: { medicine: true },
     });
 
     for (const n of due) {
+      if (pushedNotificationIds.has(n.id)) {
+        continue; // already pushed this one
+      }
       console.log(`⏰ Alarm for ${n.medicine.medicine_name}`);
       // Try web push so users see a system notification even if the page is closed
       try {
@@ -94,7 +169,9 @@ function startCron() {
           title: 'Medication Reminder',
           body: `Time to take ${n.medicine.medicine_name}`,
           url: '/alarms',
+          notificationId: n.id,
         });
+        pushedNotificationIds.add(n.id);
       } catch {}
       // Do not mark as sent; the client acknowledges explicitly
     }
@@ -130,7 +207,6 @@ app.get('/api/notifications', async (req, res) => {
   try {
     const notifications = await prisma.notification.findMany({
       include: {
-        user: true,
         medicine: true,
       },
     });
@@ -152,7 +228,6 @@ app.get('/api/notifications/due', async (req, res) => {
       },
       include: {
         medicine: true,
-        user: true,
       },
     });
 
@@ -170,10 +245,12 @@ app.post('/api/notifications/acknowledge', async (req, res) => {
       return res.status(400).json({ error: "id and action are required" });
     }
 
+    // Mark as sent and drop from dedupe set
     await prisma.notification.update({
       where: { id: parseInt(id) },
       data: { sent: true },
     });
+    try { pushedNotificationIds.delete(parseInt(id)); } catch {}
 
     if (action === "snooze") {
       const notification = await prisma.notification.findUnique({
