@@ -18,15 +18,18 @@ export function InstallPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
 
   useEffect(() => {
-    const suppressedUntil = localStorage.getItem("pwaInstallSuppressedUntil")
-    const now = Date.now()
-    const isSuppressed = suppressedUntil ? now < parseInt(suppressedUntil, 10) : false
-
     const handler = (e: Event) => {
-      if (isSuppressed) return
+      // Read suppression dynamically each time the event fires
+      const suppressedUntil = localStorage.getItem("pwaInstallSuppressedUntil")
+      const now = Date.now()
+      const isSuppressed = suppressedUntil ? now < parseInt(suppressedUntil, 10) : false
       e.preventDefault()
+      // Expose globally so other UI (landing page) can trigger it immediately
+      ;(window as any).deferredPrompt = e as BeforeInstallPromptEvent
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      setShowInstallPrompt(true)
+      if (!isSuppressed) {
+        setShowInstallPrompt(true)
+      }
     }
 
     window.addEventListener("beforeinstallprompt", handler)
@@ -45,15 +48,21 @@ export function InstallPrompt() {
     if (outcome === "accepted") {
       setDeferredPrompt(null)
       setShowInstallPrompt(false)
+      try {
+        delete (window as any).deferredPrompt
+      } catch {}
     }
   }
 
   const handleDismiss = () => {
     setShowInstallPrompt(false)
     setDeferredPrompt(null)
-    // Suppress for 7 days
-    const sevenDays = 7 * 24 * 60 * 60 * 1000
-    localStorage.setItem("pwaInstallSuppressedUntil", String(Date.now() + sevenDays))
+    // Suppress for 5 minutes
+    const fiveMinutes = 5 * 60 * 1000
+    localStorage.setItem("pwaInstallSuppressedUntil", String(Date.now() + fiveMinutes))
+    try {
+      delete (window as any).deferredPrompt
+    } catch {}
   }
 
   if (!showInstallPrompt) return null

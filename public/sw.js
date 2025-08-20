@@ -1,16 +1,7 @@
 const CACHE_NAME = "rxmind-v1"
+// Cache only guaranteed-available assets to avoid install failing
 const urlsToCache = [
   "/",
-  "/dashboard",
-  "/prescriptions",
-  "/reminders",
-  "/signup",
-  "/pharmacy-locator",
-  "/notifications",
-  "/settings",
-  "/help",
-  "/globals.css",
-  "/login",
   "/offline",
   "/manifest.json",
   "/icon-192x192.png",
@@ -20,9 +11,10 @@ const urlsToCache = [
 // Install event - cache resources
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache)
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => Promise.all(urlsToCache.map((u) => cache.add(u).catch(() => null))))
+      .then(() => self.skipWaiting())
   )
 })
 
@@ -48,15 +40,18 @@ self.addEventListener("fetch", (event) => {
 // Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName)
-          }
-        })
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName)
+            }
+          })
+        )
       )
-    })
+      .then(() => self.clients.claim())
   )
 })
 

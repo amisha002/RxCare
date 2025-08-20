@@ -56,6 +56,14 @@ export default function RemindersPage() {
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
+  // Auto collapse on small screens
+  useEffect(() => {
+    const handle = () => setSidebarCollapsed(window.innerWidth < 1024)
+    handle()
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
+
   const filteredReminders = reminders.filter((reminder) => {
     if (selectedFilter === "all") return true
     return reminder.status === selectedFilter

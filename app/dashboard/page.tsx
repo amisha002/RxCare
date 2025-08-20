@@ -35,6 +35,14 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
+  // Collapse sidebar on small screens and update on resize
+  useEffect(() => {
+    const handle = () => setSidebarCollapsed(window.innerWidth < 1024)
+    handle()
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
