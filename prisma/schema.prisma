@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       Int            @id @default(autoincrement())
+  email                    String         @unique
+  password                 String
+  age                      Int
+  phone_number             String         @unique
+  caregiver_phone          String?
+  family_members           Json?
+  created_at               DateTime       @default(now())
+  updated_at               DateTime       @updatedAt
+  caregiver_phone_verified Boolean        @default(false)
+  notifications            Notification[]
+  prescriptions            Prescription[]
+  Token                    Token[]
+}
+
+model Prescription {
+  id                 Int        @id @default(autoincrement())
+  userId             Int
+  family_member_name String
+  prescription_image String?
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+  medicines          Medicine[]
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Medicine {
+  id             Int            @id @default(autoincrement())
+  prescriptionId Int
+  medicine_name  String
+  dosage_count   Int
+  timing         Json
+  duration_days  Int
+  start_date     DateTime
+  end_date       DateTime
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  prescription   Prescription   @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  notifications  Notification[]
+}
+
+model Notification {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  medicineId     Int
+  scheduled_time DateTime
+  sent           Boolean  @default(false)
+  created_at     DateTime @default(now())
+  medicine       Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Token {
+  id        String    @id
+  userId    Int
+  jti       String    @unique
+  tokenHash String
+  type      TokenType
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum TokenType {
+  REFRESH
+}
