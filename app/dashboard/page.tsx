@@ -9,8 +9,10 @@ import { QuickActions } from "@/components/dashboard/quick-actions"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Bell } from "lucide-react"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export default function DashboardPage() {
+  const { user } = useCurrentUser()
   const [currentTime, setCurrentTime] = useState("")
   const [currentDate, setCurrentDate] = useState("")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -50,7 +52,7 @@ export default function DashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h1 className="text-3xl font-bold font-serif text-gray-800">Welcome back, Alex Johnson</h1>
+                <h1 className="text-3xl font-bold font-serif text-gray-800">{`Welcome back${user ? ", " + (user.email || "") : ""}`}</h1>
                 <p className="text-gray-600 mt-1">{currentDate}</p>
               </div>
               <div className="flex items-center space-x-4">

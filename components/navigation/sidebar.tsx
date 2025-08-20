@@ -47,7 +47,10 @@ interface SidebarProps {
   className?: string
 }
 
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+
 export function Sidebar({ collapsed = false, onToggle, className }: SidebarProps) {
+  const { user } = useCurrentUser()
   const pathname = usePathname()
 
   return (
@@ -123,12 +126,12 @@ export function Sidebar({ collapsed = false, onToggle, className }: SidebarProps
         <div className="p-2 border-t border-blue-500/30">
           <div className={cn("flex items-center space-x-3 mb-4", collapsed && "justify-center space-x-0")}>
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-white/30 transition-colors duration-200 cursor-pointer">
-              <span className="text-white font-semibold text-sm">AJ</span>
+              <span className="text-white font-semibold text-sm">{(user?.email || "U").slice(0,1).toUpperCase()}</span>
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">Alex Johnson</p>
-                <p className="text-xs text-blue-200 truncate">alex@example.com</p>
+                <p className="text-sm font-medium text-white truncate">{user?.email || "Not logged in"}</p>
+                <p className="text-xs text-blue-200 truncate">{user ? "View settings" : "Login required"}</p>
               </div>
             )}
           </div>

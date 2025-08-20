@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { Sidebar } from "@/components/navigation/sidebar"
 import { AccountInfo } from "@/components/settings/account-info"
 import { Preferences } from "@/components/settings/preferences"
@@ -8,12 +9,24 @@ import { Settings, ArrowLeft, User } from "lucide-react"
 import Link from "next/link"
 
 export default function SettingsPage() {
+  const { user: me } = useCurrentUser()
   const [user, setUser] = useState({
-    name: "Dr. Evelyn Reed",
-    email: "evelyn.reed@rxcare.com",
-    phone: "+1 (555) 123-4567",
-    age: "42 years old",
+    name: "",
+    email: "",
+    phone: "",
+    age: "",
   })
+
+  useEffect(() => {
+    if (me) {
+      setUser({
+        name: me.email.split("@")[0],
+        email: me.email,
+        phone: me.phone_number,
+        age: String(me.age) + " years",
+      })
+    }
+  }, [me])
 
   const [preferences, setPreferences] = useState({
     emailUpdates: true,

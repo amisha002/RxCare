@@ -82,6 +82,8 @@ const mockNotifications = [
   },
 ]
 
+// In future, replace with `/api/notifications?mine=1`
+
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<"all" | "unread" | "archived">("all")
   const [notifications, setNotifications] = useState(mockNotifications)

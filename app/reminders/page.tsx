@@ -51,6 +51,8 @@ const reminders = [
 ]
 
 export default function RemindersPage() {
+  // Provide a simple UI to add a local reminder for demo
+  // These are stored in localStorage so the background inline scheduler in layout can announce
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 

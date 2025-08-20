@@ -18,7 +18,12 @@ export function InstallPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
 
   useEffect(() => {
+    const suppressedUntil = localStorage.getItem("pwaInstallSuppressedUntil")
+    const now = Date.now()
+    const isSuppressed = suppressedUntil ? now < parseInt(suppressedUntil, 10) : false
+
     const handler = (e: Event) => {
+      if (isSuppressed) return
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       setShowInstallPrompt(true)
@@ -46,6 +51,9 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     setShowInstallPrompt(false)
     setDeferredPrompt(null)
+    // Suppress for 7 days
+    const sevenDays = 7 * 24 * 60 * 60 * 1000
+    localStorage.setItem("pwaInstallSuppressedUntil", String(Date.now() + sevenDays))
   }
 
   if (!showInstallPrompt) return null
