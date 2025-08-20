@@ -2,6 +2,8 @@
 CREATE TABLE "public"."User" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "age" INTEGER NOT NULL,
     "phone_number" TEXT NOT NULL,
     "caregiver_phone" TEXT,
     "family_members" JSONB,
