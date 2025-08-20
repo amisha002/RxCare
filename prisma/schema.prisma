@@ -128,3 +128,4 @@ model Notification {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
 }
+
