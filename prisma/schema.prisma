@@ -6,8 +6,10 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+<<<<<<< HEAD
 model User {
   id                       Int            @id @default(autoincrement())
   email                    String         @unique
@@ -22,6 +24,68 @@ model User {
   notifications            Notification[]
   prescriptions            Prescription[]
   Token                    Token[]
+=======
+
+// =====================
+// Users Table
+// =====================
+model User {
+  id                 Int             @id @default(autoincrement())
+  email              String          @unique
+  password           String
+  age                Int 
+  phone_number       String          @unique
+  caregiver_phone    String?
+  caregiver_phone_verified Boolean  @default(false)
+  family_members     Json?           // store array of names/relations
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+  tokens             Token[]
+  // relations
+  prescriptions      Prescription[]
+  notifications      Notification[]
+  caregiverOtps      CaregiverOtp[]
+}
+
+// =====================
+// Token Table
+// =====================
+
+model Token {
+  id         String     @id @default(cuid())
+  userId     Int 
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jti        String     @unique
+  tokenHash  String     // sha256(refreshToken)
+  type       TokenType
+  userAgent  String?
+  ip         String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+enum TokenType {
+  REFRESH
+}
+
+// =====================
+// CareGiver OTP Table
+// =====================
+
+model CaregiverOtp {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  phone     String
+  otpHash   String
+  attempts  Int      @default(0)
+  consumed  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+>>>>>>> c4e561e8b680d931d654f5ee126b50b8b5d840d0
 }
 
 model Prescription {
@@ -79,3 +143,4 @@ model Token {
 enum TokenType {
   REFRESH
 }
+

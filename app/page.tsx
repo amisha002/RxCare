@@ -52,7 +52,7 @@ export default function HomePage() {
                 trusted partner in well-being.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link href="/dashboard">
+                <Link href="/signup">
                   <Button
                     size="lg"
                     className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-8 py-4 text-lg animate-pulse-blue"
@@ -191,6 +191,40 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Install App Inline Section */}
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-3xl mx-auto">
+            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 md:p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="text-left">
+                  <h3 className="text-2xl font-bold text-gray-900">Install RxMind</h3>
+                  <p className="text-gray-600 mt-1">Add RxMind to your device for quick access and offline features.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={() => {
+                      const anyWindow: any = window
+                      if (anyWindow.deferredPrompt) {
+                        anyWindow.deferredPrompt.prompt()
+                      } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                        alert('To install: Share → Add to Home Screen')
+                      } else {
+                        alert('Use your browser menu to install or Add to Home Screen')
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Install App
+                  </Button>
+                  <Link href="/help" className="text-white">
+                    <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent">Learn how</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="container mx-auto text-center">
@@ -199,7 +233,7 @@ export default function HomePage() {
               Join thousands of users who trust RxMind to manage their medications safely and effectively.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/dashboard">
+              <Link href="/signup">
                 <Button
                   size="lg"
                   variant="secondary"
@@ -213,7 +247,7 @@ export default function HomePage() {
                 variant="outline"
                 className="border-blue-300 text-white hover:bg-blue-600 px-8 py-4 text-lg bg-transparent"
               >
-                Need help? Chat with Support
+                <Link href="/help/chat">Need help? Chat with Support</Link>
               </Button>
             </div>
           </div>

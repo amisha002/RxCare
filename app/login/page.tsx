@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { EyeOff, Eye } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -11,15 +12,41 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    window.location.href = "/dashboard"
+
+    try {
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        alert(result.error || 'Login failed')
+        return
+      }
+
+      // Save token or redirect
+      console.log('Login successful:', result)
+      localStorage.setItem('token', result.token)
+
+      window.location.href = '/dashboard'
+    } catch (err) {
+      alert('An error occurred while logging in.')
+    }
   }
+
 
   const handleGoogleLogin = () => {
     window.location.href = "/dashboard"
@@ -81,7 +108,7 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="password" className="text-gray-700">
                     Password
                   </Label>
@@ -93,7 +120,30 @@ export default function LoginPage() {
                     className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
+                </div> */}
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-700">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
+
 
                 <Button
                   type="submit"
