@@ -74,7 +74,7 @@ export default function LoginPage() {
           backgroundAttachment: "scroll",
         }}
       />
-      <div className="fixed inset-0 z-10 bg-gradient-to-br from-white/40 via-blue-50/50 to-white/40 backdrop-blur-[1px]" />
+      <div className="fixed inset-0 z-10 bg-gradient-to-br from-white/30 via-blue-50/40 to-white/30 backdrop-blur-sm" />
       <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <Card className="border-blue-100 shadow-lg">
+          <Card className="border-blue-100 shadow-lg bg-white">
             <CardHeader className="text-center pb-4">
               <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h1>
               <p className="text-gray-600">Sign in to your RxMind account to manage your medications.</p>
