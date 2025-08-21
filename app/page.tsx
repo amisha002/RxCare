@@ -33,7 +33,7 @@ export default function HomePage() {
           backgroundAttachment: "scroll",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/40 to-blue-100/50 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-white/40 to-blue-100/30 backdrop-blur-sm" />
 
       {/* Content wrapper with relative positioning */}
       <div className="relative z-10">
