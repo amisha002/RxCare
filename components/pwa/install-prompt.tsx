@@ -75,9 +75,9 @@ export function InstallPrompt() {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-800">Install RxCare</h3>
+          <h3 className="text-sm font-semibold text-gray-800">Install RxMind</h3>
           <p className="text-xs text-gray-600 mt-1">
-            Add RxCare to your home screen for quick access and offline features.
+            Add RxMind to your home screen for quick access and offline features.
           </p>
 
           <div className="flex space-x-2 mt-3">

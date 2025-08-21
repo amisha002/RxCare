@@ -15,6 +15,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen relative">
+      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
@@ -35,7 +36,7 @@ export default function HomePage() {
       />
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-white/40 to-blue-100/30 backdrop-blur-sm" />
 
-      {/* Content wrapper with relative positioning */}
+      {/* Content wrapper */}
       <div className="relative z-10">
         {/* Hero Section */}
         <section className="py-20 px-4">
@@ -60,13 +61,15 @@ export default function HomePage() {
                     Get Started
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg bg-white/80"
-                >
-                  Learn More
-                </Button>
+                <Link href="/learn-more">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg bg-white/80"
+                  >
+                    Learn More
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -191,7 +194,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Install App Inline Section */}
+        {/* Install App Section */}
         <section className="py-16 px-4 bg-white">
           <div className="max-w-3xl mx-auto">
             <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 md:p-8 shadow-sm">
@@ -207,17 +210,20 @@ export default function HomePage() {
                       if (anyWindow.deferredPrompt) {
                         anyWindow.deferredPrompt.prompt()
                       } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                        alert('To install: Share → Add to Home Screen')
+                        alert("To install: Share → Add to Home Screen")
                       } else {
-                        alert('Use your browser menu to install or Add to Home Screen')
+                        alert("Use your browser menu to install or Add to Home Screen")
                       }
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Install App
                   </Button>
-                  <Link href="/help" className="text-white">
-                    <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent">Learn how</Button>
+                  {/* ✅ Updated link to Install PWA Page */}
+                  <Link href="/help/install-pwa">
+                    <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-transparent">
+                      Learn how
+                    </Button>
                   </Link>
                 </div>
               </div>
