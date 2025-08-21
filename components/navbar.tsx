@@ -10,8 +10,8 @@ import LogoutButton from "./logoutButton/page"
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user } = useCurrentUser()
-  const isAuthed = !!user
-
+  //const isAuthed = !!user
+  const isAuthed = true
   const toggleMenu = () => setIsOpen(!isOpen)
 
   return (
@@ -51,7 +51,7 @@ export function Navbar() {
                 <span>Reminders</span>
               </Link>
               <Link
-                href={isAuthed ? "/settings" : "/login"}
+                href={isAuthed ? "/profile" : "/login"}
                 className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 <Settings className="h-4 w-4" />
@@ -62,7 +62,7 @@ export function Navbar() {
 
           {/* Desktop Auth Buttons & Theme Toggle */}
           <div className="hidden md:flex items-center space-x-4">
-            {isAuthed ? (
+            {!isAuthed ? (
               <LogoutButton/>
             ) : (
               <>

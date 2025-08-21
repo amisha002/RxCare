@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Bell, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState,useEffect } from "react"
 
 export default function PrescriptionsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
