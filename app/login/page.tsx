@@ -17,12 +17,12 @@ export default function LoginPage() {
     email: "",
     password: "",
   })
-
+  const apibaseUri = process.env.NEXT_PUBLIC_API_BASE_URI || 'http://localhost:3001';
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
-      const response = await fetch('/api/users/login', {
+      const response = await fetch(`${apibaseUri}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

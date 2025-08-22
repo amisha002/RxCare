@@ -347,6 +347,7 @@ app.post("/api/users/signup", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on port ${PORT}`);
