@@ -45,12 +45,14 @@ export function Navbar() {
                 <span>Home</span>
               </Link>
               <Link
-                href={isAuthed ? "/prescriptions" : "/login"}
-                className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                <Pill className="h-4 w-4" />
-                <span>Medications</span>
-              </Link>
+  href={isAuthed ? "/medications" : "/login"}
+  className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-blue-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
+  onClick={() => setIsOpen(false)}
+>
+  <Pill className="h-5 w-5" />
+  <span>My Medications</span>
+</Link>
+
               <Link
                 href={isAuthed ? "/reminders" : "/login"}
                 className="flex items-center space-x-1 text-white hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -117,13 +119,14 @@ export function Navbar() {
               <span>Home</span>
             </Link>
             <Link
-              href={isAuthed ? "/prescriptions" : "/login"}
-              className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-blue-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <Pill className="h-5 w-5" />
-              <span>Medications</span>
-            </Link>
+  href={isAuthed ? "/medications" : "/login"}
+  className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-blue-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
+  onClick={() => setIsOpen(false)}
+>
+  <Pill className="h-5 w-5" />
+  <span>My Medications</span>
+</Link>
+
             <Link
               href={isAuthed ? "/reminders" : "/login"}
               className="flex items-center space-x-2 text-white hover:text-blue-400 hover:bg-blue-800 px-3 py-2 rounded-md text-base font-medium transition-colors"
