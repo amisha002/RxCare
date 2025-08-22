@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 
 export default function RegisterPage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL
   const [email, setEmail] = useState("")
+  const apibaseUri = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
   const [phoneNumber, setPhoneNumber] = useState("")
   const [password, setPassword] = useState("")
   const [age, setAge] = useState(0)
@@ -65,12 +65,13 @@ export default function RegisterPage() {
       password,
       age,
       phone_number: phoneNumber,
+      caregiver_phone_verified: needsCaregiver,
       caregiver_phone: needsCaregiver ? caregiverPhone : null,
       family_members: familyMembers,
     }
 
     try {
-      const res = await fetch(`${apiUrl}/api/users/signup`, {
+      const res = await fetch(`${apibaseUri}/api/users/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,10 +117,10 @@ export default function RegisterPage() {
           backgroundAttachment: "scroll",
         }}
       />
-      <div className="fixed inset-0 z-10 bg-gradient-to-br from-white/30 via-blue-50/40 to-white/30 backdrop-blur-sm" />
+      <div className="fixed inset-0 z-10 bg-gradient-to-br from-white/40 via-blue-50/50 to-white/40 backdrop-blur-[1px]" />
       <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-start">
-          <Card className="w-full max-w-2xl mx-auto border-blue-100 shadow-xl bg-white">
+          <Card className="w-full max-w-2xl mx-auto border-blue-100 shadow-xl">
             <CardHeader className="text-center space-y-2">
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
@@ -159,7 +160,7 @@ export default function RegisterPage() {
                   </Label>
                   <Input
                     id="age"
-                    type=""
+                    type="number"
                     placeholder="How old are you?"
                     value={age}
                     onChange={(e) => setAge(Number(e.target.value))}

@@ -4,56 +4,39 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-<<<<<<< HEAD
+// =====================
+// User Table
+// =====================
 model User {
-  id                       Int            @id @default(autoincrement())
-  email                    String         @unique
+  id                       Int             @id @default(autoincrement())
+  email                    String          @unique
   password                 String
   age                      Int
-  phone_number             String         @unique
+  phone_number             String          @unique
   caregiver_phone          String?
-  family_members           Json?
-  created_at               DateTime       @default(now())
-  updated_at               DateTime       @updatedAt
-  caregiver_phone_verified Boolean        @default(false)
+  caregiver_phone_verified Boolean         @default(false)
+  family_members           Json?           // store array of names/relations
+  created_at               DateTime        @default(now())
+  updated_at               DateTime        @updatedAt
+
+  // Relations
   notifications            Notification[]
   prescriptions            Prescription[]
-  Token                    Token[]
-=======
-
-// =====================
-// Users Table
-// =====================
-model User {
-  id                 Int             @id @default(autoincrement())
-  email              String          @unique
-  password           String
-  age                Int 
-  phone_number       String          @unique
-  caregiver_phone    String?
-  caregiver_phone_verified Boolean  @default(false)
-  family_members     Json?           // store array of names/relations
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
-  tokens             Token[]
-  // relations
-  prescriptions      Prescription[]
-  notifications      Notification[]
-  caregiverOtps      CaregiverOtp[]
+  tokens                   Token[]
+  caregiverOtps            CaregiverOtp[]
 }
 
 // =====================
 // Token Table
 // =====================
-
 model Token {
   id         String     @id @default(cuid())
-  userId     Int 
+  userId     Int
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   jti        String     @unique
   tokenHash  String     // sha256(refreshToken)
@@ -71,13 +54,12 @@ enum TokenType {
 }
 
 // =====================
-// CareGiver OTP Table
+// Caregiver OTP Table
 // =====================
-
 model CaregiverOtp {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
+  user      User     @relation(fields: [userId], references: [id])
   phone     String
   otpHash   String
   attempts  Int      @default(0)
@@ -85,22 +67,29 @@ model CaregiverOtp {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
->>>>>>> c4e561e8b680d931d654f5ee126b50b8b5d840d0
 }
 
+// =====================
+// Prescription Table
+// =====================
 model Prescription {
-  id                 Int        @id @default(autoincrement())
+  id                 Int          @id @default(autoincrement())
   userId             Int
   family_member_name String
   prescription_image String?
-  created_at         DateTime   @default(now())
-  updated_at         DateTime   @updatedAt
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+
+  // Relations
   medicines          Medicine[]
-  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// =====================
+// Medicine Table
+// =====================
 model Medicine {
-  id             Int            @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   prescriptionId Int
   medicine_name  String
   dosage_count   Int
@@ -108,12 +97,17 @@ model Medicine {
   duration_days  Int
   start_date     DateTime
   end_date       DateTime
-  created_at     DateTime       @default(now())
-  updated_at     DateTime       @updatedAt
-  prescription   Prescription   @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  // Relations
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
   notifications  Notification[]
 }
 
+// =====================
+// Notification Table
+// =====================
 model Notification {
   id             Int      @id @default(autoincrement())
   userId         Int
@@ -121,26 +115,10 @@ model Notification {
   scheduled_time DateTime
   sent           Boolean  @default(false)
   created_at     DateTime @default(now())
+
+  // Relations
   medicine       Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Token {
-  id        String    @id
-  userId    Int
-  jti       String    @unique
-  tokenHash String
-  type      TokenType
-  userAgent String?
-  ip        String?
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime
-  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum TokenType {
-  REFRESH
-}
 

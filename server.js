@@ -3,6 +3,7 @@ const express = require('express');
 const cron = require('node-cron');
 const cors = require('cors');
 const { PrismaClient } = require('./lib/generated/prisma');
+const bcrypt = require('bcryptjs');
 const webpush = require('web-push');
 
 const app = express();
@@ -280,7 +281,72 @@ app.post('/api/notifications/acknowledge', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+app.post("/api/users/signup", async (req, res) => {
+  try {
+    const {
+      email,
+      password,
+      age,
+      phone_number,
+      caregiver_phone_verified,
+      caregiver_phone,
+      family_members,
+    } = req.body;
 
+    // Validation
+    if (!email || !password || !phone_number || !age) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        phone_number,
+        caregiver_phone,
+        caregiver_phone_verified: caregiver_phone_verified || false,
+        age: parseInt(age, 10),
+
+        // ✅ Bulk create family members if provided
+        family_members: {
+          create: (family_members || []).map((member) => ({
+            name: member.name,
+            relation: member.relation,
+          })),
+        },
+      }
+      // include: {
+      //   family_members: true,
+      // },
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        phone_number: newUser.phone_number,
+        caregiver_phone: newUser.caregiver_phone,
+        caregiver_phone_verified: newUser.caregiver_phone_verified,
+        age: newUser.age,
+        family_members: newUser.family_members,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Signup error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on port ${PORT}`);
