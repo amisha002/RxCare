@@ -573,8 +573,259 @@ app.get("/api/users/me", authenticateToken, async (req, res) => {
   }
 });
 
-// Start server
+
+
+// const multer = require("multer");
+
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/'); // Save to 'uploads/' folder
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + '-' + file.originalname);
+//   }
+// });
+// const upload = multer({ storage });
+
+// app.post("/api/prescriptions/upload", upload.single("file"), async (req, res) => {
+//   // Multer saves the file to disk and puts info in req.file
+//   const filePath = req.file.path; // path on disk
+
+//   // Save relevant info in DB (e.g., Prisma)
+//   await prisma.prescription.create({
+//     data: {
+//       userId,
+//       family_member_name,
+//       prescription_image: filePath,
+//       // other fields...
+//     }
+//   });
+
+//   res.json({ success: true });
+// });
+
+// app.use('/uploads', express.static('uploads'));
+
+// // Start server
+// app.listen(PORT, () => {
+//   console.log(`🚀 Backend server running on port ${PORT}`);
+//   startCron();
+// });
+
+const fs = require('fs');
+const path = require('path');
+
+// const express = require('express');
+const multer = require('multer');
+
+// const { PrismaClient } = require('@prisma/client'); // uncomment if not already required above
+
+// const prisma = new PrismaClient(); // uncomment if not already created
+// const app = express();
+
+// Ensure uploads directory exists
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: function (req, file, cb) {
+    // sanitize original name minimally
+    const safeOriginal = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    cb(null, Date.now() + '-' + safeOriginal);
+  }
+});
+
+const upload = multer({ storage });
+
+// Accept both 'prescription_image' and 'file' field names
+const uploadOne = upload.fields([
+  { name: 'prescription_image', maxCount: 1 },
+  { name: 'file', maxCount: 1 },
+]);
+
+// //working in local storage-
+// app.post('/api/prescriptions/upload', (req, res, next) => {
+//   console.log('--- Incoming upload request headers ---');
+//   console.log(req.headers);
+//   next();
+// }, uploadOne, async (req, res) => {
+//   try {
+//     console.log('--- multer parsed body ---');
+//     console.log('req.body:', req.body);
+//     console.log('req.files keys:', Object.keys(req.files || {}));
+
+//     const file =
+//       (req.files && req.files['prescription_image'] && req.files['prescription_image'][0]) ||
+//       (req.files && req.files['file'] && req.files['file'][0]);
+
+//     if (!req.body.family_member_name) {
+//       return res.status(400).json({ success: false, error: 'family_member_name is required' });
+//     }
+
+//     const filePath = file ? path.join('uploads', path.basename(file.path)) : null;
+
+//     // Step 1: Create the prescription first (only with fields that exist in Prescription model)
+//     const prescription = await prisma.prescription.create({
+//       data: {
+//         userId: 1, // Use your default user ID
+//         family_member_name: req.body.family_member_name,
+//         prescription_image: filePath,
+//       },
+//     });
+
+//     // Step 2: Create medicine record if medicine data is provided
+//     if (req.body.medication && req.body.medication !== 'na') {
+//       await prisma.medicine.create({
+//         data: {
+//           prescriptionId: prescription.id,
+//           name: req.body.medication,
+//           dosage: req.body.dosage,
+//           frequency: req.body.frequency,
+//           prescribed_by: req.body.doctor,
+//           instructions: req.body.instructions,
+//           // Add other medicine fields as per your Medicine model
+//         },
+//       });
+//     }
+
+//     // Step 3: Fetch the complete prescription with medicines for response
+//     const completePrescription = await prisma.prescription.findUnique({
+//       where: { id: prescription.id },
+//       include: {
+//         medicines: true,
+//         user: true,
+//       },
+//     });
+
+//     res.status(201).json({ 
+//       success: true, 
+//       prescription: completePrescription,
+//       message: 'Prescription uploaded successfully. Medicine details will be extracted by ML model.'
+//     });
+
+//   } catch (err) {
+//     console.error('Upload route unexpected error:', err);
+//     res.status(500).json({ success: false, error: err.message || 'Internal error' });
+//   }
+// });
+
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+app.post('/api/prescriptions/upload', (req, res, next) => {
+  console.log('--- Incoming upload request headers ---');
+  console.log(req.headers);
+  next();
+}, uploadOne, async (req, res) => {
+  try {
+    console.log('--- multer parsed body ---');
+    console.log('req.body:', req.body);
+    console.log('req.files keys:', Object.keys(req.files || {}));
+
+    const file =
+      (req.files && req.files['prescription_image'] && req.files['prescription_image'][0]) ||
+      (req.files && req.files['file'] && req.files['file'][0]);
+
+    if (!req.body.family_member_name) {
+      return res.status(400).json({ success: false, error: 'family_member_name is required' });
+    }
+
+    let cloudinaryUrl = null;
+
+    // Upload to Cloudinary if file exists
+    if (file) {
+      try {
+        console.log('Uploading to Cloudinary...');
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'prescriptions', // Optional: organize in folders
+          resource_type: 'image',
+          public_id: `prescription_${Date.now()}`, // Optional: custom public ID
+        });
+        
+        cloudinaryUrl = result.secure_url;
+        console.log('Cloudinary upload successful:', cloudinaryUrl);
+
+        // Delete local file after successful upload to Cloudinary
+        const fs = require('fs');
+        fs.unlink(file.path, (err) => {
+          if (err) console.error('Error deleting local file:', err);
+          else console.log('Local file deleted successfully');
+        });
+        
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload failed:', cloudinaryError);
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Failed to upload image to cloud storage' 
+        });
+      }
+    }
+
+    // Step 1: Create the prescription with Cloudinary URL
+    const prescription = await prisma.prescription.create({
+      data: {
+        userId: 1, // Use your default user ID
+        family_member_name: req.body.family_member_name,
+        prescription_image: cloudinaryUrl, // Store Cloudinary URL instead of local path
+      },
+    });
+
+    // Step 2: Create medicine record if medicine data is provided
+    if (req.body.medication && req.body.medication !== 'na') {
+      await prisma.medicine.create({
+        data: {
+          prescriptionId: prescription.id,
+          name: req.body.medication,
+          dosage: req.body.dosage,
+          frequency: req.body.frequency,
+          prescribed_by: req.body.doctor,
+          instructions: req.body.instructions,
+        },
+      });
+    }
+
+    // Step 3: Fetch the complete prescription with medicines for response
+    const completePrescription = await prisma.prescription.findUnique({
+      where: { id: prescription.id },
+      include: {
+        medicines: true,
+        user: true,
+      },
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      prescription: completePrescription,
+      message: 'Prescription uploaded successfully to cloud storage. Medicine details will be extracted by ML model.',
+      imageUrl: cloudinaryUrl
+    });
+
+  } catch (err) {
+    console.error('Upload route unexpected error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal error' });
+  }
+});
+
+
+// Static hosting of uploads
+app.use('/uploads', express.static(UPLOAD_DIR));
+
+/* Start server (remove startCron() unless you define it)*/
+// const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on port ${PORT}`);
-  startCron();
 });
+
+
+

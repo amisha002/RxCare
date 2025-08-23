@@ -9,6 +9,7 @@ export interface CurrentUser {
   age: number
 }
 
+const BASE_URI = process.env.NEXT_PUBLIC_API_BASE_URL;
 export function useCurrentUser() {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -17,7 +18,7 @@ export function useCurrentUser() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch("/api/me", { credentials: "include" })
+        const res = await fetch(`${BASE_URI}/api/me`, { credentials: "include" })
         if (!res.ok) throw new Error("unauthorized")
         const data = await res.json()
         if (!cancelled) setUser(data.user)

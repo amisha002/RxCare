@@ -6,8 +6,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DB_URL")
-//  url       = env("DATABASE_URL")
-//  directUrl = env("DIRECT_URL")
 }
 
 // =====================
@@ -76,7 +74,7 @@ model CaregiverOtp {
 model Prescription {
   id                 Int          @id @default(autoincrement())
   userId             Int
-  family_member_name String
+  family_member_name String?
   prescription_image String?
   created_at         DateTime     @default(now())
   updated_at         DateTime     @updatedAt
