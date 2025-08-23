@@ -12,23 +12,32 @@ async function createTestNotification() {
     console.log('🕐 Current time:', now.toLocaleString());
     console.log('⏰ Scheduled time:', scheduledTime.toLocaleString());
     
-    // Get first available user and medicine (for testing)
-    // Select only columns that exist in the current database to avoid P2022
-    const user = await prisma.user.findFirst({
+    // Find the specific user by email
+    const user = await prisma.user.findUnique({
+      where: {
+        email: 'shubhradeeproy343@gmail.com'
+      },
       select: {
         id: true,
         email: true,
       }
     });
+    
     const medicine = await prisma.medicine.findFirst();
     
-    if (!user || !medicine) {
-      console.log('❌ No users or medicines found in database');
-      console.log('Please create a user and medicine first');
+    if (!user) {
+      console.log('❌ User with email shubhradeeproy343@gmail.com not found in database');
+      console.log('Please create this user first or check the email address');
       return;
     }
     
-    console.log('👤 Using user:', user.name || user.email || user.id);
+    if (!medicine) {
+      console.log('❌ No medicines found in database');
+      console.log('Please create a medicine first');
+      return;
+    }
+    
+    console.log('👤 Using user:', user.email);
     console.log('💊 Using medicine:', medicine.medicine_name || medicine.id);
     
     // Create the test notification
@@ -49,6 +58,7 @@ async function createTestNotification() {
     console.log('1. Wait 3 minutes');
     console.log('2. You should get a push notification');
     console.log('3. The notification will appear even if /alarms page is closed!');
+    console.log('4. Visit /alarms page to hear the alarm sound');
     
   } catch (error) {
     console.error('❌ Error creating test notification:', error);

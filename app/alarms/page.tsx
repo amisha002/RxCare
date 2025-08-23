@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Notification = {
   id: number;
@@ -19,6 +20,9 @@ export default function AlarmPage() {
     try { return localStorage.getItem('rxmind_audio_unlocked') === '1'; } catch { return false; }
   });
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  
+  // Get authentication context
+  const { token } = useAuth();
 
   // Initialize audio once when component mounts
   useEffect(() => {
@@ -181,9 +185,22 @@ export default function AlarmPage() {
   }, []);
 
   const fetchNotifications = useCallback(async () => {
+    // Don't fetch if not authenticated
+    if (!token) {
+      console.log('🔒 Not authenticated, skipping notification fetch');
+      return;
+    }
+    
     try {
-      const res = await fetch(`${API_BASE}/api/notifications/due`);
-      if (!res.ok) return;
+      const res = await fetch(`${API_BASE}/api/notifications/due`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
+        console.error('❌ Failed to fetch notifications:', res.status, res.statusText);
+        return;
+      }
       const data: Notification[] = await res.json();
       if (data.length > 0) {
         setActive(data[0]);
@@ -212,7 +229,7 @@ export default function AlarmPage() {
     } catch (error) {
       console.error("❌ Failed to fetch notifications:", error);
     }
-  }, [API_BASE, audio, isPlaying, audioUnlocked]);
+  }, [API_BASE, audio, isPlaying, audioUnlocked, token]);
 
   useEffect(() => {
     const id = setInterval(fetchNotifications, 5000); // poll every 5s
@@ -220,13 +237,19 @@ export default function AlarmPage() {
   }, [fetchNotifications]);
 
   const acknowledge = async (action: "taken" | "snooze") => {
-    if (!active) return;
+    if (!active || !token) return;
     try {
-      await fetch(`${API_BASE}/api/notifications/acknowledge`, {
+      const res = await fetch(`${API_BASE}/api/notifications/acknowledge`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ id: active.id, action }),
       });
+      if (!res.ok) {
+        console.error('❌ Failed to acknowledge notification:', res.status, res.statusText);
+      }
     } catch (error) {
       console.error("❌ Failed to acknowledge notification:", error);
     }
@@ -257,6 +280,31 @@ export default function AlarmPage() {
     // Immediate user feedback
     alert("⏰ Snoozed! You'll be reminded again soon.");
   };
+
+  // Show authentication message if not logged in
+  if (!token) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-6 h-24 w-24 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center shadow-inner">
+            <span className="text-4xl">🔒</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800">Authentication Required</h2>
+          <p className="text-gray-500 mt-1">
+            Please log in to view and manage your medication alarms.
+          </p>
+          <div className="mt-4">
+            <a
+              href="/login"
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Go to Login
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!active)
     return (

@@ -229,15 +229,15 @@ function startCron() {
 // Protected API Routes (require authentication)
 app.post('/api/notifications', authenticateToken, async (req, res) => {
   try {
-    const { userId, medicineId, scheduled_time } = req.body;
+    const { medicineId, scheduled_time } = req.body;
 
-    if (!userId || !medicineId || !scheduled_time) {
-      return res.status(400).json({ error: "userId, medicineId, and scheduled_time are required" });
+    if (!medicineId || !scheduled_time) {
+      return res.status(400).json({ error: "medicineId and scheduled_time are required" });
     }
 
     const newNotification = await prisma.notification.create({
       data: {
-        userId,
+        userId: req.user.sub, // Use authenticated user's ID
         medicineId,
         scheduled_time: new Date(scheduled_time),
       },
@@ -252,6 +252,9 @@ app.post('/api/notifications', authenticateToken, async (req, res) => {
 app.get('/api/notifications', authenticateToken, async (req, res) => {
   try {
     const notifications = await prisma.notification.findMany({
+      where: {
+        userId: req.user.sub, // Filter by authenticated user
+      },
       include: {
         medicine: true,
       },
@@ -269,6 +272,7 @@ app.get('/api/notifications/due', authenticateToken, async (req, res) => {
 
     const dueNotifications = await prisma.notification.findMany({
       where: {
+        userId: req.user.sub, // Filter by authenticated user
         scheduled_time: { lte: now },
         sent: false,
       },
@@ -289,6 +293,18 @@ app.post('/api/notifications/acknowledge', authenticateToken, async (req, res) =
 
     if (!id || !action) {
       return res.status(400).json({ error: "id and action are required" });
+    }
+
+    // Verify the notification belongs to the authenticated user
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id: parseInt(id),
+        userId: req.user.sub,
+      },
+    });
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification not found or access denied" });
     }
 
     // Mark as sent and drop from dedupe set
