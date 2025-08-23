@@ -17,37 +17,101 @@ async function main() {
     },
   });
 
-  // 2. Create a Prescription for the user
-  const prescription = await prisma.prescription.create({
+  // 2. Create multiple Prescriptions for the user
+  const prescription1 = await prisma.prescription.create({
     data: {
       userId: user.id,
       family_member_name: "Father",
-      prescription_image: "https://example.com/prescription.png",
+      prescription_image: "https://example.com/prescription-father.png",
     },
   });
 
-  // 3. Add Medicines under that prescription
+  const prescription2 = await prisma.prescription.create({
+    data: {
+      userId: user.id,
+      family_member_name: "Mother",
+      prescription_image: "https://example.com/prescription-mother.png",
+    },
+  });
+
+  const prescription3 = await prisma.prescription.create({
+    data: {
+      userId: user.id,
+      family_member_name: "Self",
+      prescription_image: "https://example.com/prescription-self.png",
+    },
+  });
+
+  // 3. Add Medicines under prescriptions
   const medicine1 = await prisma.medicine.create({
     data: {
-      prescriptionId: prescription.id,
-      medicine_name: "Paracetamol",
+      prescriptionId: prescription1.id,
+      medicine_name: "Lisinopril",
       dosage_count: 1,
-      timing: JSON.stringify(["08:00", "20:00"]), // morning & evening
-      duration_days: 5,
+      timing: JSON.stringify(["08:00"]), // once daily
+      duration_days: 30,
       start_date: new Date(),
-      end_date: new Date(new Date().setDate(new Date().getDate() + 5)),
+      end_date: new Date(new Date().setDate(new Date().getDate() + 30)),
     },
   });
 
   const medicine2 = await prisma.medicine.create({
     data: {
-      prescriptionId: prescription.id,
+      prescriptionId: prescription1.id,
+      medicine_name: "Atorvastatin",
+      dosage_count: 1,
+      timing: JSON.stringify(["20:00"]), // once daily at night
+      duration_days: 30,
+      start_date: new Date(),
+      end_date: new Date(new Date().setDate(new Date().getDate() + 30)),
+    },
+  });
+
+  const medicine3 = await prisma.medicine.create({
+    data: {
+      prescriptionId: prescription2.id,
+      medicine_name: "Metformin",
+      dosage_count: 2,
+      timing: JSON.stringify(["08:00", "20:00"]), // twice daily
+      duration_days: 60,
+      start_date: new Date(),
+      end_date: new Date(new Date().setDate(new Date().getDate() + 60)),
+    },
+  });
+
+  const medicine4 = await prisma.medicine.create({
+    data: {
+      prescriptionId: prescription2.id,
       medicine_name: "Amoxicillin",
       dosage_count: 2,
-      timing: JSON.stringify(["09:00", "21:00"]), // morning & night
+      timing: JSON.stringify(["09:00", "21:00"]), // twice daily
       duration_days: 7,
       start_date: new Date(),
       end_date: new Date(new Date().setDate(new Date().getDate() + 7)),
+    },
+  });
+
+  const medicine5 = await prisma.medicine.create({
+    data: {
+      prescriptionId: prescription3.id,
+      medicine_name: "Ibuprofen",
+      dosage_count: 1,
+      timing: JSON.stringify(["As needed"]), // as needed
+      duration_days: 90,
+      start_date: new Date(),
+      end_date: new Date(new Date().setDate(new Date().getDate() + 90)),
+    },
+  });
+
+  const medicine6 = await prisma.medicine.create({
+    data: {
+      prescriptionId: prescription3.id,
+      medicine_name: "Ventolin HFA",
+      dosage_count: 2,
+      timing: JSON.stringify(["As needed"]), // as needed
+      duration_days: 120,
+      start_date: new Date(),
+      end_date: new Date(new Date().setDate(new Date().getDate() + 120)),
     },
   });
 
@@ -61,17 +125,27 @@ async function main() {
       },
       {
         userId: user.id,
-        medicineId: medicine1.id,
+        medicineId: medicine2.id,
         scheduled_time: new Date(new Date().setHours(20, 0, 0, 0)), // today 8 PM
       },
       {
         userId: user.id,
-        medicineId: medicine2.id,
+        medicineId: medicine3.id,
+        scheduled_time: new Date(new Date().setHours(8, 0, 0, 0)), // today 8 AM
+      },
+      {
+        userId: user.id,
+        medicineId: medicine3.id,
+        scheduled_time: new Date(new Date().setHours(20, 0, 0, 0)), // today 8 PM
+      },
+      {
+        userId: user.id,
+        medicineId: medicine4.id,
         scheduled_time: new Date(new Date().setHours(9, 0, 0, 0)), // today 9 AM
       },
       {
         userId: user.id,
-        medicineId: medicine2.id,
+        medicineId: medicine4.id,
         scheduled_time: new Date(new Date().setHours(21, 0, 0, 0)), // today 9 PM
       },
     ],

@@ -121,6 +121,7 @@ import { PWAWrapper } from "@/components/pwa/pwa-wrapper"
 import { Navbar } from "@/components/navbar"
 import "./globals.css"
 import ConnectionBanner from "@/components/connectionBanner"
+import { AuthProvider } from "@/contexts/AuthContext"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const poppins = Poppins({
@@ -198,8 +199,10 @@ html {
       <body className="font-sans">
         
         <PWAWrapper>
-          <Navbar />
-          {children}
+          <AuthProvider>
+            <Navbar />
+            {children}
+          </AuthProvider>
         </PWAWrapper>
         <ConnectionBanner />
       </body>

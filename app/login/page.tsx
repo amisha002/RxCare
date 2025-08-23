@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -17,33 +18,28 @@ export default function LoginPage() {
     email: "",
     password: "",
   })
-  const apibaseUri = process.env.NEXT_PUBLIC_API_BASE_URI || 'http://localhost:3001';
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  
+  const { login } = useAuth()
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError("")
 
     try {
-      const response = await fetch(`${apibaseUri}/api/users/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        alert(result.error || 'Login failed')
-        return
+      const success = await login(formData.email, formData.password)
+      
+      if (success) {
+        window.location.href = '/dashboard'
+      } else {
+        setError('Invalid email or password')
       }
-
-      // Save token or redirect
-      console.log('Login successful:', result)
-      localStorage.setItem('token', result.token)
-
-      window.location.href = '/dashboard'
     } catch (err) {
-      alert('An error occurred while logging in.')
+      setError('An error occurred while logging in.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -145,11 +141,18 @@ export default function LoginPage() {
                 </div>
 
 
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+                
                 <Button
                   type="submit"
+                  disabled={isLoading}
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 py-3"
                 >
-                  Sign In
+                  {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
               </form>
 

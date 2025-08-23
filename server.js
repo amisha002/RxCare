@@ -5,6 +5,8 @@ const cors = require('cors');
 const { PrismaClient } = require('./lib/generated/prisma');
 const bcrypt = require('bcryptjs');
 const webpush = require('web-push');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -15,16 +17,16 @@ const pushedNotificationIds = new Set();
 
 // CORS configuration - MUST be before routes
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.3001',
-    'http://localhost:3002',
-    'http://127.0.0.1:3002',
-    'http://localhost:3003',
-    'http://127.0.0.1:3003'
-  ],
+  // origin: [
+  //   'http://localhost:3000',
+  //   'http://127.0.0.1:3000',
+  //   'http://localhost:3001',
+  //   'http://127.0.0.3001',
+  //   'http://localhost:3002',
+  //   'http://127.0.0.1:3002',
+  //   'http://localhost:3003',
+  //   'http://127.0.0.1:3003'
+  // ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -32,6 +34,49 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+
+// JWT Utility Functions
+function generateJti() {
+  return crypto.randomUUID();
+}
+
+function sha256(input) {
+  return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+function signAccessToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30m" });
+}
+
+function signRefreshToken(payload) {
+  return jwt.sign(payload, process.env.REFRESH_SECRET, { expiresIn: "30d" });
+}
+
+function verifyAccessToken(token) {
+  return jwt.verify(token, process.env.JWT_SECRET);
+}
+
+function verifyRefreshToken(token) {
+  return jwt.verify(token, process.env.REFRESH_SECRET);
+}
+
+// Authentication Middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    const decoded = verifyAccessToken(token);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+}
 
 // Web Push setup (VAPID)
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
@@ -181,8 +226,8 @@ function startCron() {
   console.log('🚀 Cron jobs started');
 }
 
-// API Routes
-app.post('/api/notifications', async (req, res) => {
+// Protected API Routes (require authentication)
+app.post('/api/notifications', authenticateToken, async (req, res) => {
   try {
     const { userId, medicineId, scheduled_time } = req.body;
 
@@ -204,7 +249,7 @@ app.post('/api/notifications', async (req, res) => {
   }
 });
 
-app.get('/api/notifications', async (req, res) => {
+app.get('/api/notifications', authenticateToken, async (req, res) => {
   try {
     const notifications = await prisma.notification.findMany({
       include: {
@@ -218,7 +263,7 @@ app.get('/api/notifications', async (req, res) => {
   }
 });
 
-app.get('/api/notifications/due', async (req, res) => {
+app.get('/api/notifications/due', authenticateToken, async (req, res) => {
   try {
     const now = new Date();
 
@@ -238,7 +283,7 @@ app.get('/api/notifications/due', async (req, res) => {
   }
 });
 
-app.post('/api/notifications/acknowledge', async (req, res) => {
+app.post('/api/notifications/acknowledge', authenticateToken, async (req, res) => {
   try {
     const { id, action } = req.body;
 
@@ -316,18 +361,8 @@ app.post("/api/users/signup", async (req, res) => {
         caregiver_phone,
         caregiver_phone_verified: caregiver_phone_verified || false,
         age: parseInt(age, 10),
-
-        // ✅ Bulk create family members if provided
-        family_members: {
-          create: (family_members || []).map((member) => ({
-            name: member.name,
-            relation: member.relation,
-          })),
-        },
-      }
-      // include: {
-      //   family_members: true,
-      // },
+        family_members: family_members || [],
+      },
     });
 
     return res.status(201).json({
@@ -344,6 +379,196 @@ app.post("/api/users/signup", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Signup error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Login endpoint
+app.post("/api/users/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Create tokens
+    const accessToken = signAccessToken({ sub: user.id, email: user.email });
+    const jti = generateJti();
+    const refreshToken = signRefreshToken({ sub: user.id, jti });
+
+    // Persist hashed refresh token
+    const tokenHash = sha256(refreshToken);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    const userAgent = req.headers["user-agent"] || "unknown";
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.ip || "unknown";
+
+    await prisma.token.create({
+      data: {
+        userId: user.id,
+        jti,
+        tokenHash,
+        type: "REFRESH",
+        userAgent,
+        ip,
+        expiresAt,
+      },
+    });
+
+    // Return tokens and user info
+    return res.status(200).json({
+      message: "Login successful",
+      token: accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        phone_number: user.phone_number,
+        caregiver_phone: user.caregiver_phone,
+        caregiver_phone_verified: user.caregiver_phone_verified,
+        age: user.age,
+        family_members: user.family_members,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Refresh token endpoint
+app.post("/api/users/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: "Refresh token is required" });
+    }
+
+    // Verify refresh token
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (error) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+
+    // Check if token exists in database
+    const tokenHash = sha256(refreshToken);
+    const tokenRecord = await prisma.token.findFirst({
+      where: {
+        tokenHash,
+        jti: decoded.jti,
+        type: "REFRESH",
+        expiresAt: { gt: new Date() },
+        revokedAt: null,
+      },
+    });
+
+    if (!tokenRecord) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Generate new tokens
+    const newAccessToken = signAccessToken({ sub: user.id, email: user.email });
+    const newJti = generateJti();
+    const newRefreshToken = signRefreshToken({ sub: user.id, jti: newJti });
+
+    // Update token record
+    const newTokenHash = sha256(newRefreshToken);
+    await prisma.token.update({
+      where: { id: tokenRecord.id },
+      data: {
+        jti: newJti,
+        tokenHash: newTokenHash,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Token refreshed successfully",
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    console.error("❌ Refresh token error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Logout endpoint
+app.post("/api/users/logout", authenticateToken, async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (refreshToken) {
+      const tokenHash = sha256(refreshToken);
+      await prisma.token.updateMany({
+        where: {
+          tokenHash,
+          userId: req.user.sub,
+          type: "REFRESH",
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      });
+    }
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("❌ Logout error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get current user endpoint
+app.get("/api/users/me", authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.sub },
+      select: {
+        id: true,
+        email: true,
+        phone_number: true,
+        caregiver_phone: true,
+        caregiver_phone_verified: true,
+        age: true,
+        family_members: true,
+        created_at: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("❌ Get user error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

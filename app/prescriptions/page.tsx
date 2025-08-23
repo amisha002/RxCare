@@ -6,12 +6,16 @@ import { PrescriptionDocuments } from "@/components/prescriptions/prescription-d
 import { QuickActions } from "@/components/prescriptions/quick-actions"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Bell, ArrowLeft } from "lucide-react"
+import { Bell, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState,useEffect } from "react"
+import { useState, useEffect } from "react"
+import { usePrescriptions } from "@/hooks/usePrescriptions"
+import { ProtectedRoute } from "@/components/ProtectedRoute"
 
 export default function PrescriptionsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { data, loading, error } = usePrescriptions()
+  
   // Auto collapse on small screens
   useEffect(() => {
     const handle = () => setSidebarCollapsed(window.innerWidth < 1024)
@@ -20,16 +24,17 @@ export default function PrescriptionsPage() {
     return () => window.removeEventListener("resize", handle)
   }, [])
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+    <ProtectedRoute>
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+          <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      {/* Main Content */}
-      <div
-    className={`flex-1 transition-all duration-300 overflow-auto ${
-      !sidebarCollapsed ? 'shadow-2xl shadow-black/40 ring-1 ring-black/10' : ''
-    }`}> 
-        <div className="p-6">
+        {/* Main Content */}
+        <div
+      className={`flex-1 transition-all duration-300 overflow-auto ${
+        !sidebarCollapsed ? 'shadow-2xl shadow-black/40 ring-1 ring-black/10' : ''
+      }`}> 
+          <div className="p-6">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
@@ -51,63 +56,89 @@ export default function PrescriptionsPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="border-blue-100">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Active Medications</p>
-                      <p className="text-2xl font-bold text-blue-600">6</p>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="border-gray-100">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-center h-16">
+                        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600">Error loading prescription data: {error}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="border-blue-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">Active Medications</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {data?.summary.activeMedicines || 0}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                        Current
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                      Current
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-orange-100">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Due for Refill</p>
-                      <p className="text-2xl font-bold text-orange-600">2</p>
+                <Card className="border-orange-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">Due for Refill</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {data?.summary.dueForRefill || 0}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                        Soon
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                      Soon
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-green-100">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Prescriptions</p>
-                      <p className="text-2xl font-bold text-green-600">12</p>
+                <Card className="border-green-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">Prescriptions</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {data?.summary.totalPrescriptions || 0}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        Total
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
-                      Total
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-purple-100">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Doctors</p>
-                      <p className="text-2xl font-bold text-purple-600">6</p>
+                <Card className="border-purple-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">Doctors</p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {data?.summary.uniqueDoctors || 0}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                        Active
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                      Active
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Main Content */}
@@ -116,13 +147,20 @@ export default function PrescriptionsPage() {
             <QuickActions />
 
             {/* Prescription Table */}
-            <PrescriptionTable />
+            <PrescriptionTable 
+              prescriptions={data?.prescriptions || []} 
+              loading={loading} 
+            />
 
             {/* Prescription Documents */}
-            <PrescriptionDocuments />
+            <PrescriptionDocuments 
+              prescriptions={data?.prescriptions || []} 
+              loading={loading} 
+            />
           </div>
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

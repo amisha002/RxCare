@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Bell } from "lucide-react"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { ProtectedRoute } from "@/components/ProtectedRoute"
 
 export default function DashboardPage() {
   const { user } = useCurrentUser()
@@ -44,7 +45,8 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
@@ -180,6 +182,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 }
